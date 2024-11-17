@@ -1,0 +1,36 @@
+<h1>{{ post.title }}</h1>
+<p>By {{ post.author.username }} | {{ post.created_at }}</p>
+<p>{{ post.content }}</p>
+
+<!-- Display likes and like/unlike button -->
+<p>{{ post.get_likes_count }} Likes</p>
+<form method="POST" action="{% url 'post_detail' post.id %}">
+    {% csrf_token %}
+    {% if user_has_liked %}
+        <button type="submit" name="like">Unlike</button>  <!-- User already liked the post -->
+    {% else %}
+        <button type="submit" name="like">Like</button>  <!-- User has not liked the post -->
+    {% endif %}
+</form>
+
+<!-- Comments Section -->
+<h2>Comments</h2>
+<ul>
+    {% for comment in comments %}
+        <li>
+            <strong>{{ comment.author.username }}:</strong> {{ comment.content }} 
+            <br>
+            <small>{{ comment.created_at }}</small>
+        </li>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+</ul>
+
+<!-- Comment Form -->
+<h3>Leave a Comment:</h3>
+<form method="POST">
+    {% csrf_token %}
+    <textarea name="content" rows="4" cols="50"></textarea><br>
+    <button type="submit" name="comment">Post Comment</button>
+</form>

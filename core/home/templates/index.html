@@ -1,0 +1,34 @@
+{%extends "base.html"%}
+{%block start%}
+    <h1>{{page}}</h1>
+    
+    <br>
+    <a href="/about/">About</a>
+    <a href="/failure_page/">Failure</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>S.N</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Eligibility</th>
+            </tr>
+        </thead>
+        {%for people in peoples%}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{people.name}}</td>
+            <td>{{people.age}}</td>
+            <td {% if people.age < 18 %} style="background:red" {%endif%}>
+                {% if people.age > 18 %}
+                    {{"Eligibile"}}
+                {%else%}
+                    {{"Not Eligible"}}
+                {%endif%}
+            </td>
+        </tr>
+        {%endfor%}
+
+    </table>
+    {{text|truncatechars:80}}
+{%endblock%}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block start %}
+<h1>All Posts</h1>
+
+<!-- Link to create a new post -->
+<a href="{% url 'create_post' %}">Create a new post</a>
+
+<ul>
+    {% for post_data in posts_with_likes %}
+    <div class="post-item">
+        <h3>{{ post_data.post.title }}</h3>
+        <p>{{ post_data.post.content }}</p>
+        <p>By {{ post_data.post.author.username }} | {{ post_data.post.created_at }}</p>
+
+        <!-- Display like count with a clickable link -->
+        <p><a href="#" data-toggle="modal" data-target="#likeModal{{ post_data.post.id }}">{{ post_data.post.like_count }} Likes</a></p>
+
+        <!-- Like button -->
+        <form method="POST" action="{% url 'post_list' %}">
+            {% csrf_token %}
+            <input type="hidden" name="post_id" value="{{ post_data.post.id }}">
+            {% if post_data.post.id in liked_posts %}
+            <button type="submit" name="like" class="btn btn-danger">Unlike</button>
+            {% else %}
+            <button type="submit" name="like" class="btn btn-primary">Like</button>
+            {% endif %}
+        </form>
+
+        <!-- Comment button (opens modal) -->
+        <button class="btn btn-info" data-toggle="modal" data-target="#commentModal{{ post_data.post.id }}">Comment</button>
+
+        <!-- Modal for showing users who liked -->
+        <div class="modal fade" id="likeModal{{ post_data.post.id }}" tabindex="-1" role="dialog" aria-labelledby="likeModalLabel{{ post_data.post.id }}" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="likeModalLabel{{ post_data.post.id }}">Users who liked "{{ post_data.post.title }}"</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- List of users who liked the post -->
+                        <ul>
+                            {% for username in post_data.liked_users %}
+                            <li>{{ username }}</li>
+                            {% empty %}
+                            <li>No one has liked this post yet.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for commenting -->
+        <div class="modal fade" id="commentModal{{ post_data.post.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Leave a comment for "{{ post_data.post.title }}"</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Comment form -->
+                        <form method="POST" action="{% url 'post_list' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="post_id" value="{{ post_data.post.id }}">
+                            <textarea name="comment_content" rows="4" class="form-control" placeholder="Enter your comment"></textarea>
+                            <button type="submit" name="comment" class="btn btn-primary mt-2">Submit Comment</button>
+                        </form>
+
+                        <!-- Display existing comments for this post inside the modal -->
+                        <div class="comments-section mt-3">
+                            <h5>Previous Comments:</h5>
+                            <div class="comments-scrollable">
+                                {% for comment in post_data.post.comments.all %}
+                                <div class="comment-item">
+                                    <p><strong>{{ comment.author.username }}</strong> said:</p>
+                                    <p>{{ comment.content }}</p>
+                                    <p><small>Posted on {{ comment.created_at }}</small></p>
+                                </div>
+                                {% empty %}
+                                <p>No comments yet. Be the first to comment!</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+    </div>
+    {% endfor %}
+</ul>
+{% endblock %}
