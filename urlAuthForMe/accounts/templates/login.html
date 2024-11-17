@@ -1,0 +1,12 @@
+{% extends 'base.html' %} {% block content %}
+<p>Login</p>
+<hr />
+<form method="post">
+  {% csrf_token %} {% if messages %}
+  <div class="alert alert-primary" role="alert">
+    {% for message in messages %} {{ message }} {% endfor %}
+  </div>
+  {% endif %} {{form.as_p}}
+  <button type="submit" class="btn btn-success">Login</button>
+</form>
+{% endblock %}
