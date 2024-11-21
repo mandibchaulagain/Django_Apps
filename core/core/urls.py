@@ -21,7 +21,7 @@ from vege.views import *
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
+from api.views import *
 urlpatterns = [
     path("", home, name="home"),
     path("failure_page/",failure_page,name="failure_page"),
@@ -36,6 +36,7 @@ urlpatterns = [
     path('postlist/', post_list, name='post_list'),
     path('postlist/<int:post_id>/', post_detail, name='post_detail'),
     path('create/', create_post, name='create_post'),
+    path('api/',handle_initial_route, name='handle_initial_route'),
     path("admin/", admin.site.urls),
 ]
 

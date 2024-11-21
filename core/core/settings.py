@@ -43,7 +43,8 @@ EXTERNAL_APPS = [
     "home.apps.HomeConfig",
     "polls.apps.PollsConfig",
     "vege",
-    "accounts"
+    "accounts",
+    "api"
 ]
 
 INSTALLED_APPS+=EXTERNAL_APPS
