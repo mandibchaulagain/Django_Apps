@@ -37,6 +37,8 @@ urlpatterns = [
     path('postlist/<int:post_id>/', post_detail, name='post_detail'),
     path('create/', create_post, name='create_post'),
     path('api/',handle_initial_route, name='handle_initial_route'),
+    path('profile/<str:username>/', user_profile, name='user_profile'),
+    path('postlist/edit/<int:post_id>/', edit_post, name='edit_post'),
     path("admin/", admin.site.urls),
 ]
 

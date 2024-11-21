@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate,login,logout
 from .models import Post, Comment, Like
 from .forms import PostForm
+from django.http import HttpResponseForbidden
 
 @login_required(login_url='/login/')
 # Create your views here.
@@ -158,17 +159,19 @@ def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     comments = post.comments.all()
 
+    # Get the users who liked the post (to be passed to the modal)
+    liked_users = post.likes.values_list('user__username', flat=True)
+
     # Check if the current user has liked the post
     user_has_liked = Like.objects.filter(post=post, user=request.user).exists()
 
     # Handle liking/unliking
     if request.method == 'POST':
         if 'like' in request.POST:
-            # Like the post
+            # Like or Unlike the post based on current state
             if not user_has_liked:
                 Like.objects.create(post=post, user=request.user)
             else:
-                # Unlike the post
                 Like.objects.filter(post=post, user=request.user).delete()
             # Update the user_has_liked value for the next request
             user_has_liked = not user_has_liked
@@ -177,11 +180,15 @@ def post_detail(request, post_id):
             content = request.POST.get('content')
             Comment.objects.create(post=post, author=request.user, content=content)
 
+        # Redirect to the same page after POST request to avoid resubmission
+        return redirect('post_detail', post_id=post_id)
 
+    # GET request or redirected after POST
     return render(request, 'post_detail.html', {
         'post': post,
         'comments': comments,
-        'user_has_liked': user_has_liked  # Pass this to the template
+        'user_has_liked': user_has_liked,
+        'liked_users': liked_users  # Pass the list of users who liked the post
     })
 
 # Create a new post
@@ -198,3 +205,30 @@ def create_post(request):
         form = PostForm()
 
     return render(request, 'create_post.html', {'form': form})
+
+def user_profile(request, username):
+    user = get_object_or_404(User, username=username)
+    posts = Post.objects.filter(author=user)
+    
+    context = {
+        'user': user,
+        'posts': posts
+    }
+    return render(request, 'user_profile.html', context)
+
+def edit_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    # Ensure only the author can edit the post
+    if post.author != request.user:
+        return HttpResponseForbidden("You are not allowed to edit this post.")
+
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect('post_list')  # Redirect to the list of posts after saving
+    else:
+        form = PostForm(instance=post)  # Prepopulate the form with the post data
+
+    return render(request, 'edit_post.html', {'form': form, 'post': post})

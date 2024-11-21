@@ -8,9 +8,11 @@
 <ul>
     {% for post_data in posts_with_likes %}
     <div class="post-item">
-        <h3>{{ post_data.post.title }}</h3>
+        <h3>{{ post_data.post.title }}</h3> {% if post_data.post.author == request.user %}
+        <a href="{% url 'edit_post' post_data.post.id %}" class="btn btn-warning">Edit</a>
+    {% endif %}
         <p>{{ post_data.post.content }}</p>
-        <p>By {{ post_data.post.author.username }} | {{ post_data.post.created_at }}</p>
+        <p>By <a href="{% url 'user_profile' post_data.post.author.username %}">{{ post_data.post.author.username }}</a> | {{ post_data.post.created_at }}</p>
 
         <!-- Display like count with a clickable link -->
         <p><a href="#" data-toggle="modal" data-target="#likeModal{{ post_data.post.id }}">{{ post_data.post.like_count }} Likes</a></p>
@@ -43,7 +45,7 @@
                         <!-- List of users who liked the post -->
                         <ul>
                             {% for username in post_data.liked_users %}
-                            <li>{{ username }}</li>
+                            <li><a href="{% url 'user_profile' username %}">{{ username }}</a></li>
                             {% empty %}
                             <li>No one has liked this post yet.</li>
                             {% endfor %}
@@ -81,7 +83,7 @@
                             <div class="comments-scrollable">
                                 {% for comment in post_data.post.comments.all %}
                                 <div class="comment-item">
-                                    <p><strong>{{ comment.author.username }}</strong> said:</p>
+                                    <p><strong><a href="{% url 'user_profile' comment.author.username %}">{{ comment.author.username }}</a></strong> said:</p>
                                     <p>{{ comment.content }}</p>
                                     <p><small>Posted on {{ comment.created_at }}</small></p>
                                 </div>
