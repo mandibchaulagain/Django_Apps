@@ -22,8 +22,26 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from api.views import *
+from django.contrib.auth.models import User
+from rest_framework import routers, serializers, viewsets
+
+# Serializers define the API representation.
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = User
+        fields = ['url', 'username', 'email', 'is_staff']
+
+# ViewSets define the view behavior.
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+# Routers provide an easy way of automatically determining the URL conf.
+router = routers.DefaultRouter()
+router.register(r'users', UserViewSet)
+
 urlpatterns = [
-    path("", home, name="home"),
+    path('', include(router.urls)),
     path("failure_page/",failure_page,name="failure_page"),
     path("about/",about,name="about"),
     path("polls/",include("polls.urls")),
@@ -39,6 +57,7 @@ urlpatterns = [
     path('api/',handle_initial_route, name='handle_initial_route'),
     path('profile/<str:username>/', user_profile, name='user_profile'),
     path('postlist/edit/<int:post_id>/', edit_post, name='edit_post'),
+    path('api-auth/', include('rest_framework.urls')),
     path("admin/", admin.site.urls),
 ]
 
