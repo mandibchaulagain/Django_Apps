@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from home.views import *
-from vege.views import *
+from vege.views import recipes, delete_recipe,delete_recipe, register, login_page, logout_page, post_list, post_detail, create_post, user_profile, edit_post, delete_post, delete_comment, update_recipe
 from django.conf.urls.static import static
 from django.conf import settings
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
@@ -58,6 +58,8 @@ urlpatterns = [
     path('profile/<str:username>/', user_profile, name='user_profile'),
     path('postlist/edit/<int:post_id>/', edit_post, name='edit_post'),
     path('api-auth/', include('rest_framework.urls')),
+    path('delete_post/<int:post_id>/', delete_post, name='delete_post'),
+    path('delete_comment/<int:comment_id>/', delete_comment, name='delete_comment'),
     path("admin/", admin.site.urls),
 ]
 

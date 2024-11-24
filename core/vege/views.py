@@ -103,10 +103,6 @@ def logout_page(request):
     logout(request)
     return redirect('/login/')
 
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Post, Comment, Like
-from django.contrib.auth.decorators import login_required
-
 def post_list(request):
     posts = Post.objects.all().order_by('-created_at')
 
@@ -232,3 +228,23 @@ def edit_post(request, post_id):
         form = PostForm(instance=post)  # Prepopulate the form with the post data
 
     return render(request, 'edit_post.html', {'form': form, 'post': post})
+
+def delete_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    # Ensure that only the post's author can delete the post
+    if post.author != request.user:
+        return HttpResponseForbidden("You are not allowed to delete this post.")
+
+    post.delete()
+    return redirect('post_list')  # Redirect to the post list after deletion
+
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    # Ensure that only the comment's author can delete the comment
+    if comment.author != request.user:
+        return HttpResponseForbidden("You are not allowed to delete this comment.")
+
+    comment.delete()
+    return redirect('post_detail', post_id=comment.post.id)  # Redirect back to the post's detail page

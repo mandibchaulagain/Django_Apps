@@ -12,6 +12,9 @@
         <a href="{% url 'edit_post' post_data.post.id %}" class="btn btn-warning">Edit</a>
     {% endif %}
         <p>{{ post_data.post.content }}</p>
+        {% if post_data.post.author == request.user %}
+            <a href="{% url 'delete_post' post_data.post.id %}" class="btn btn-warning">Delete Post</a>
+        {% endif %}
         <p>By <a href="{% url 'user_profile' post_data.post.author.username %}">{{ post_data.post.author.username }}</a> | {{ post_data.post.created_at }}</p>
 
         <!-- Display like count with a clickable link -->
@@ -85,6 +88,12 @@
                                 <div class="comment-item">
                                     <p><strong><a href="{% url 'user_profile' comment.author.username %}">{{ comment.author.username }}</a></strong> said:</p>
                                     <p>{{ comment.content }}</p>
+                                    {% if comment.author == request.user %}
+                                    <a href="{% url 'delete_comment' comment.id %}" class="btn btn-warning">
+                                        
+                                        Delete Comment
+                                    </a>
+                                {% endif %}
                                     <p><small>Posted on {{ comment.created_at }}</small></p>
                                 </div>
                                 {% empty %}
