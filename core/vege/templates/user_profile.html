@@ -13,9 +13,13 @@
             <p>{{ post.content }}</p>
             <p>Created on {{ post.created_at }}</p>
             <a href="{% url 'post_detail' post.id %}">View Post</a>
+            {%if post.privacy == 'private' %}
+            <p>This post is private and visible only to you.</p>
+            {% endif %}
         </li>
-    {% empty %}
+        {% if not post in posts %}
         <p>{{ user.username }} has not posted anything yet.</p>
+        {% endif %}
     {% endfor %}
 </ul>
 {% endblock %}

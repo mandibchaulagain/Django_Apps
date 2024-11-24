@@ -104,7 +104,8 @@ def logout_page(request):
     return redirect('/login/')
 
 def post_list(request):
-    posts = Post.objects.all().order_by('-created_at')
+    posts = Post.objects.filter(privacy = Post.PUBLIC).order_by('-created_at')
+    # .order_by('-created_at')
 
     # Add user_has_liked flag for each post and like counts
     user_likes = Like.objects.filter(user=request.user)
