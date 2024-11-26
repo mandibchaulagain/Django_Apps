@@ -1,116 +1,160 @@
 {% extends "base.html" %}
 {% block start %}
-<h1>All Posts</h1>
+<div class="container mt-5">
+    <h1 id="animated-title" class="text-center mb-5" style="font-weight: 500; letter-spacing: 0.5px; color: #333;"></h1>
 
-<!-- Link to create a new post -->
-<a href="{% url 'create_post' %}">Create a new post</a>
+<script>
+    const languages = ['Todos los posts', 'Tous les posts', 'Tutti i post', '所有帖子', 'All Posts'];
+    let currentLangIndex = 0;
+    const titleElement = document.getElementById('animated-title');
 
-<ul>
+    function animateTitle() {
+        titleElement.textContent = languages[currentLangIndex];
+        titleElement.classList.add('fade-in');
+
+        currentLangIndex++;
+        if (currentLangIndex >= languages.length) {
+            clearInterval(intervalId);  // Stop after reaching "All Posts"
+        }
+
+        setTimeout(() => {
+            titleElement.classList.remove('fade-in');
+        }, 1);  // Ultra-fast duration for the fade
+    }
+
+    const intervalId = setInterval(animateTitle, 300);  // Transition every 0.3 seconds
+    animateTitle();  // Initial trigger
+</script>
+
+<style>
+    @keyframes fade-in {
+        0% { opacity: 0; transform: scale(0.95); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+    .fade-in {
+        animation: fade-in 0.15s ease-out forwards;  /* Ultra-fast fade-in effect */
+    }
+</style>
+
+
+    <!-- Create Post Button -->
+    <div class="text-center mb-5">
+        <a href="{% url 'create_post' %}" class="btn btn-dark btn-lg px-5 py-3" style="border-radius: 25px;">+ Create New Post</a>
+    </div>
+
     {% for post_data in posts_with_likes %}
-    <div class="post-item">
-        <h3>{{ post_data.post.title }}</h3> {% if post_data.post.author == request.user %}
-        <a href="{% url 'edit_post' post_data.post.id %}" class="btn btn-warning">Edit</a>
-    {% endif %}
-        <p>{{ post_data.post.content }}</p>
-        {% if post_data.post.author == request.user %}
-            <a href="{% url 'delete_post' post_data.post.id %}" class="btn btn-warning">Delete Post</a>
-        {% endif %}
-        <p>By <a href="{% url 'user_profile' post_data.post.author.username %}">{{ post_data.post.author.username }}</a> | {{ post_data.post.created_at }}</p>
+    <div class="card mb-4" style="border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);">
+        <div class="card-body p-4">
+            <!-- Post Header -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="card-title" style="font-weight: 600; color: #333;">{{ post_data.post.title }}</h3>
+                {% if post_data.post.author == request.user %}
+                <div class="d-flex gap-2">
+                    <a href="{% url 'edit_post' post_data.post.id %}" class="btn btn-outline-secondary btn-sm m-1" style="border-radius: 20px;">Edit</a>
+                    <a href="{% url 'delete_post' post_data.post.id %}" class="btn btn-outline-danger btn-sm m-1" style="border-radius: 18.6px;">Delete</a>
+                </div>
+                {% endif %}
+            </div>
+            <p class="text-muted mb-4" style="font-size: 0.9rem;">By <a href="{% url 'user_profile' post_data.post.author.username %}" class="text-decoration-none text-dark">{{ post_data.post.author.username }}</a> | {{ post_data.post.created_at }}</p>
 
-        <!-- Display like count with a clickable link -->
-        <p><a href="#" data-toggle="modal" data-target="#likeModal{{ post_data.post.id }}">{{ post_data.post.like_count }} Likes</a></p>
+            <!-- Post Content -->
+            <p style="line-height: 1.6; font-size: 1.1rem; color: #555;">{{ post_data.post.content }}</p>
 
-        <!-- Like button -->
-        <form method="POST" action="{% url 'post_list' %}">
-            {% csrf_token %}
-            <input type="hidden" name="post_id" value="{{ post_data.post.id }}">
-            {% if post_data.post.id in liked_posts %}
-            <button type="submit" name="like" class="btn btn-danger">Unlike</button>
-            {% else %}
-            <button type="submit" name="like" class="btn btn-primary">Like</button>
-            {% endif %}
-        </form>
+            <!-- Actions Section (Like, Comment) -->
+            <div class="d-flex justify-content-start align-items-center mt-4 gap-3">
+                 <!-- Like Count (Centered like Facebook) -->
+                 <a href="#" data-toggle="modal" data-target="#likeModal{{ post_data.post.id }}" class="text-dark m-1 text-decoration-none" style="font-size: 1rem; font-weight: 500;">
+                    {{ post_data.post.like_count }} Likes
+                </a>
+                <!-- Like/Unlike Button -->
+                <form method="POST" action="{% url 'post_list' %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="post_id" value="{{ post_data.post.id }}">
+                    {% if post_data.post.id in liked_posts %}
+                    <button type="submit" name="like" class="btn btn-outline-danger btn-sm" style="border-radius: 20px;">♥ Unlike</button>
+                    {% else %}
+                    <button type="submit" name="like" class="btn btn-outline-primary btn-sm" style="border-radius: 20px;">♥ Like</button>
+                    {% endif %}
+                </form>
 
-        <!-- Comment button (opens modal) -->
-        <button class="btn btn-info" data-toggle="modal" data-target="#commentModal{{ post_data.post.id }}">Comment</button>
+               
 
-        <!-- Modal for showing users who liked -->
-        <div class="modal fade" id="likeModal{{ post_data.post.id }}" tabindex="-1" role="dialog" aria-labelledby="likeModalLabel{{ post_data.post.id }}" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="likeModalLabel{{ post_data.post.id }}">Users who liked "{{ post_data.post.title }}"</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- List of users who liked the post -->
-                        <ul>
-                            {% for username in post_data.liked_users %}
-                            <li><a href="{% url 'user_profile' username %}">{{ username }}</a></li>
-                            {% empty %}
-                            <li>No one has liked this post yet.</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    </div>
+                <!-- Comment Button -->
+                <button class="btn btn-outline-secondary btn-sm m-1" data-toggle="modal" data-target="#commentModal{{ post_data.post.id }}" style="border-radius: 20px;">💬 Comment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for showing users who liked -->
+    <div class="modal fade" id="likeModal{{ post_data.post.id }}" tabindex="-1" aria-labelledby="likeModalLabel{{ post_data.post.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 15px;">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="likeModalLabel{{ post_data.post.id }}" style="font-weight: 600;">Liked by</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group">
+                        {% for username in post_data.liked_users %}
+                        <li class="list-group-item border-0 text-center">
+                            <a href="{% url 'user_profile' username %}" class="text-dark text-decoration-none" style="font-weight: 500;">{{ username }}</a>
+                        </li>
+                        {% empty %}
+                        <li class="text-muted text-center">No likes yet</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-dark" data-dismiss="modal" style="border-radius: 25px;">Close</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Modal for commenting -->
-        <div class="modal fade" id="commentModal{{ post_data.post.id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Leave a comment for "{{ post_data.post.title }}"</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Comment form -->
-                        <form method="POST" action="{% url 'post_list' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="post_id" value="{{ post_data.post.id }}">
-                            <textarea name="comment_content" rows="4" class="form-control" placeholder="Enter your comment"></textarea>
-                            <button type="submit" name="comment" class="btn btn-primary mt-2">Submit Comment</button>
-                        </form>
+    <!-- Modal for commenting -->
+    <div class="modal fade" id="commentModal{{ post_data.post.id }}" tabindex="-1" aria-labelledby="commentModalLabel{{ post_data.post.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 15px;">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="commentModalLabel{{ post_data.post.id }}" style="font-weight: 600;">Comment on "{{ post_data.post.title }}"</h5>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Comment Form -->
+                    <form method="POST" action="{% url 'post_list' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="post_id" value="{{ post_data.post.id }}">
+                        <textarea name="comment_content" class="form-control" rows="4" placeholder="Write your comment..." style="border-radius: 15px;"></textarea>
+                        <button type="submit" name="comment" class="btn btn-dark mt-3 px-4 py-2" style="border-radius: 25px;">Post Comment</button>
+                    </form>
 
-                        <!-- Display existing comments for this post inside the modal -->
-                        <div class="comments-section mt-3">
-                            <h5>Previous Comments:</h5>
-                            <div class="comments-scrollable">
-                                {% for comment in post_data.post.comments.all %}
-                                <div class="comment-item">
-                                    <p><strong><a href="{% url 'user_profile' comment.author.username %}">{{ comment.author.username }}</a></strong> said:</p>
-                                    <p>{{ comment.content }}</p>
-                                    {% if comment.author == request.user %}
-                                    <a href="{% url 'delete_comment' comment.id %}" class="btn btn-warning">
-                                        
-                                        Delete Comment
-                                    </a>
+                    <!-- Display Existing Comments -->
+                    <div class="comments-section mt-3">
+                        <h5 class="text-muted" style="font-size: 1rem; font-weight: 500;">Previous Comments:</h5>
+                        <div class="comments-scrollable" style="max-height: 300px; overflow-y: auto;">
+                            {% for comment in post_data.post.comments.all %}
+                            <div class="comment-item mb-3">
+                                <p><strong><a href="{% url 'user_profile' comment.author.username %}" class="text-dark text-decoration-none">{{ comment.author.username }}</a></strong> said:</p>
+                                <p style="color: #555;">{{ comment.content }}</p>
+                                {% if comment.author == request.user %}
+                                <a href="{% url 'delete_comment' comment.id %}" class="btn btn-outline-danger btn-sm" style="border-radius: 20px;">Delete Comment</a>
                                 {% endif %}
-                                    <p><small>Posted on {{ comment.created_at }}</small></p>
-                                </div>
-                                {% empty %}
-                                <p>No comments yet. Be the first to comment!</p>
-                                {% endfor %}
+                                <p class="text-muted" style="font-size: 0.8rem;">Posted on {{ comment.created_at }}</p>
                             </div>
+                            {% empty %}
+                            <p class="text-center text-muted">No comments yet. Be the first to comment!</p>
+                            {% endfor %}
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" style="border-radius: 25px;">Close</button>
                 </div>
             </div>
         </div>
-
-        <hr>
     </div>
+
     {% endfor %}
-</ul>
+</div>
 {% endblock %}
