@@ -5,21 +5,28 @@
 
 <h2>Posts</h2>
 <ul>
-    {% for post in posts %}
-        <li>
-            <h3>{{ post.title }}</h3>{% if post.author == request.user %}
-            <a href="{% url 'edit_post' post.id %}" class="btn btn-warning">Edit</a>
-        {% endif %}
-            <p>{{ post.content }}</p>
-            <p>Created on {{ post.created_at }}</p>
-            <a href="{% url 'post_detail' post.id %}">View Post</a>
-            {%if post.privacy == 'private' %}
-            <p>This post is private and visible only to you.</p>
+    {% if posts %}
+        {% for post in posts %}
+            {% if post.author == request.user or post.privacy == 'public' %}
+                <li>
+                    <h3>{{ post.title }}</h3>
+                    <p>{{ post.content }}</p>
+                    <p>Created on {{ post.created_at }}</p>
+                    <a href="{% url 'post_detail' post.id %}">View Post</a>
+
+                    {% if post.author == request.user %}
+                        <a href="{% url 'edit_post' post.id %}" class="btn btn-warning">Edit</a>
+                        {% if post.privacy == 'private' %}
+                            <p>This post is private and visible only to you.</p>
+                        {% endif %}
+                    {% elif post.privacy == 'private' %}
+                        <p>This post is private and visible only to you.</p>
+                    {% endif %}
+                </li>
             {% endif %}
-        </li>
-        {% if not post in posts %}
+        {% endfor %}
+    {% else %}
         <p>{{ user.username }} has not posted anything yet.</p>
-        {% endif %}
-    {% endfor %}
+    {% endif %}
 </ul>
 {% endblock %}
