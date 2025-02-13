@@ -8,6 +8,8 @@ from django.contrib.auth import authenticate,login,logout
 from .models import Post, Comment, Like
 from .forms import PostForm
 from django.http import HttpResponseForbidden
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 @login_required(login_url='/login/')
 # Create your views here.
@@ -66,38 +68,88 @@ def register(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        user = User.objects.filter(username = username)
-        if user.exists():
-            messages.info(request, 'Username already exists!')
-            return redirect('/register/')
-        
+        # Validate inputs
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists!')
+            return render(request, 'register.html', {
+                'first_name': first_name,
+                'last_name': last_name,
+                'username': username
+            })
+
+        # Validate password
+        if len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.isalpha() for char in password):
+            messages.error(request, 'Password must be at least 8 characters long, contain letters and numbers.')
+            return render(request, 'register.html', {
+                'first_name': first_name,
+                'last_name': last_name,
+                'username': username
+            })
+
+        # Create the user
         user = User.objects.create(
-            first_name = first_name,
-            last_name = last_name,
-            username = username,   
+            first_name=first_name,
+            last_name=last_name,
+            username=username,
         )
         user.set_password(password)
         user.save()
-        messages.info(request, 'Account created successfully!')
-        return redirect('/register/')
-    return render(request,'register.html')
+        messages.success(request, 'Account created successfully!')
+        return redirect('/login/')
+    
+    return render(request, 'register.html')
+
+
+def change_password(request):
+    if request.method == "POST":
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_new_password = request.POST.get('confirm_new_password')
+
+        user = request.user
+
+        # Check if current password is correct
+        if not user.check_password(current_password):
+            messages.error(request, "Current password is incorrect.")
+            return redirect('/change_password/')
+
+        # Check if new passwords match
+        if new_password != confirm_new_password:
+            messages.error(request, "New passwords do not match.")
+            return redirect('/change_password/')
+
+        try:
+            # Validate the new password
+            validate_password(new_password, user=user)
+        except ValidationError as e:
+            for error in e:
+                messages.error(request, error)
+            return redirect('/change_password/')
+
+        # Update password after validation
+        user.set_password(new_password)
+        user.save()
+        messages.success(request, "Password updated successfully! Please log in again.")
+        return redirect('/login/')
+
+    return render(request, 'change_password.html')
 
 def login_page(request):
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        if not User.objects.filter(username = username).exists():
-            messages.error(request,'Invalid username')
+        if not User.objects.filter(username=username).exists():
+            messages.error(request, 'Invalid username')
             return redirect('/login/')
-        user = authenticate(username = username, password = password)
+        user = authenticate(username=username, password=password)
         if user is None:
             messages.error(request, 'Invalid Password')
             return redirect('/login/')
         else:
             login(request, user)
             return redirect('/recipes/')
-    return render(request,'login.html')
+    return render(request, 'login.html')
 
 def logout_page(request):
     logout(request)

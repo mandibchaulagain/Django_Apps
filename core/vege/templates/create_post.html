@@ -1,9 +1,63 @@
-{%extends "base.html"%}
-{%block start%}
-<h1>Create a New Post</h1>
-<form method="POST">
+{% extends "base.html" %}
+
+{% block start %}
+<!-- Create a New Post Header -->
+<h1 class="text-center mb-5" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; color: #333;">Create a New Post</h1>
+
+<!-- Form Container -->
+<div class="container">
+  <form method="post" class="bg-white p-4 rounded shadow-sm">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Post</button>
-</form>
-{%endblock%}
+    
+    <!-- Title Field -->
+    <div class="form-group mb-4">
+      <label for="{{ form.title.id_for_label }}" class="form-label" style="font-weight: 500; font-size: 1.1rem;">Title</label>
+      {{ form.title }}
+      {% if form.title.errors %}
+        <div class="invalid-feedback d-block">
+          {% for error in form.title.errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Content Field -->
+    <div class="form-group mb-4">
+      <label for="{{ form.content.id_for_label }}" class="form-label" style="font-weight: 500; font-size: 1.1rem;">Content</label>
+      {{ form.content }}
+      {% if form.content.errors %}
+        <div class="invalid-feedback d-block">
+          {% for error in form.content.errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Privacy Field (Radio Buttons) -->
+    <div class="form-group mb-4">
+      <label for="{{ form.privacy.id_for_label }}" class="form-label" style="font-weight: 500; font-size: 1.1rem;">Privacy</label>
+      <div class="form-check">
+        {% for radio in form.privacy %}
+          <div class="form-check">
+            {{ radio.tag }}
+            <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+          </div>
+        {% endfor %}
+      </div>
+      {% if form.privacy.errors %}
+        <div class="invalid-feedback d-block">
+          {% for error in form.privacy.errors %}
+            <p>{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-dark btn-lg px-5 py-3" style="border-radius: 25px;">Submit</button>
+  </form>
+</div>
+
+{% endblock %}
